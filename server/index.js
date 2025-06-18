@@ -72,9 +72,20 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on('paint' , ({details , roomName})=>{
-    io.to(roomName).emit('points' , {details : details});
-  })
+  socket.on("paint", ({ details, roomName, paint }) => {
+    io.to(roomName).emit("points", {
+      details: details,
+      paint: paint,
+    });
+  });
+
+  socket.on('color-change' , ({color , roomName})=>{
+    io.to(roomName).emit('color-change' , color);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("🔴 Disconnected Socket id : ", socket.id);
+  });
 });
 
 server.listen(port, "0.0.0.0", () => {
