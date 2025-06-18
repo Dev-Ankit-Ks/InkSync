@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:skribbl/routes/routes_name.dart';
 import 'package:skribbl/utils/utlis.dart';
 import 'package:skribbl/widgets/custum_text_feilds.dart';
 
@@ -15,6 +16,25 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
   final TextEditingController name_of_room_controller = TextEditingController();
   late String? _maxRoundsValue;
   late String? _roomSizeValue;
+  void createRoom() {
+    if (name_of_person_controller.text.isNotEmpty &&
+        name_of_room_controller.text.isNotEmpty &&
+        _maxRoundsValue != null &&
+        _roomSizeValue != null) {
+      Map<String, String> data = {
+        "nickname": name_of_person_controller.text,
+        "name": name_of_room_controller.text,
+        "occupancy": _maxRoundsValue!,
+        "maxRounds": _roomSizeValue!,
+      };
+      Navigator.pushNamed(
+        context,
+        RoutesName.PaintScreen,
+        arguments: {'data': data, 'screenFrom': "createRoom"},
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,7 +125,9 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  createRoom();
+                },
                 child: const Text(
                   "Create",
                   style: TextStyle(color: Colors.white, fontSize: 16),

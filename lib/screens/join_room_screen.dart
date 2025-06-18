@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:skribbl/routes/routes_name.dart';
 import 'package:skribbl/widgets/custum_text_feilds.dart';
 
 class JoinRoomScreen extends StatefulWidget {
@@ -11,6 +12,23 @@ class JoinRoomScreen extends StatefulWidget {
 class _JoinRoomScreenState extends State<JoinRoomScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _roomNameController = TextEditingController();
+
+  void joinRoom() {
+    if (_nameController.text.isNotEmpty &&
+        _roomNameController.text.isNotEmpty) {
+      Map data = {
+        "nickname": _nameController.text.toString(),
+        "name": _roomNameController.text.toString(),
+      };
+
+      Navigator.pushNamed(
+        context,
+        RoutesName.PaintScreen,
+        arguments: {'data': data, 'screenFrom': 'joinRoom'},
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,7 +57,7 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
           ),
           SizedBox(height: 40),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: joinRoom,
             child: const Text(
               "Join",
               style: TextStyle(color: Colors.white, fontSize: 16),

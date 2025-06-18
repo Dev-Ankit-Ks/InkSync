@@ -6,4 +6,6 @@ class RoutesName {
 
   //home screen routes name
   static const String joinRoomScreen = 'join_room_screen';
+
+  static const String PaintScreen = 'Paint_Screen';
 }
