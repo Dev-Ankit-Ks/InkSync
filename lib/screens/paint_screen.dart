@@ -79,10 +79,13 @@ class _PaintScreenState extends State<PaintScreen> {
   }
 
   void connect() {
-    _socket = IO.io('https://inksync-backend.onrender.com', <String, dynamic>{
-      'transports': ['websocket', 'polling'],
-      'autoConnect': false,
-    });
+    _socket = IO.io(
+      'https://inksync-backend.onrender.com',
+      IO.OptionBuilder()
+          .setTransports(['websocket', 'polling']) // WebSocket fallback
+          .disableAutoConnect() // manually connect
+          .build(),
+    );
 
     _socket.connect();
 
