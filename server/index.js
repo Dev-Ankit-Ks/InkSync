@@ -157,23 +157,45 @@ io.on("connection", (socket) => {
     io.to(roomName).emit("clean-screen", "");
   });
 
+  // socket.on("disconnect", async () => {
+  //   try {
+  //     let room = await Room.findOne({ "players.socketID": socket.id });
+  //     for (let i = 0; i < room.players.length; i++) {
+  //       if (room.players[i].socketID === socket.id) {
+  //         room.players.splice(i, 1);
+  //         break;
+  //       }
+  //     }
+  //     room = await room.save();
+  //     if (room.players.length === 1) {
+  //       socket.broadcast.to(room.name).emit("show-leaderboard", room.players);
+  //     } else {
+  //       socket.broadcast.to(room.name).emit("user-disconnected", room);
+  //     }
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // });
+
   socket.on("disconnect", async () => {
     try {
       let room = await Room.findOne({ "players.socketID": socket.id });
-      for (let i = 0; i < room.players.length; i++) {
-        if (room.players[i].socketID === socket.id) {
-          room.players.splice(i, 1);
-          break;
-        }
+
+      if (!room) {
+        console.log("No room found for disconnected socket:", socket.id);
+        return;
       }
-      room = await room.save();
+
+      room.players = room.players.filter((p) => p.socketID !== socket.id);
+      await room.save();
+
       if (room.players.length === 1) {
         socket.broadcast.to(room.name).emit("show-leaderboard", room.players);
       } else {
         socket.broadcast.to(room.name).emit("user-disconnected", room);
       }
     } catch (err) {
-      console.log(err);
+      console.log("Disconnect error:", err);
     }
   });
 });
