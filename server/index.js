@@ -72,6 +72,66 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("msg", async (data) => {
+    try {
+      if (data.msg === data.word) {
+        let room = await Room.find({ name: data.roomName });
+        let userPlayer = room[0].players.filter(
+          (player) => player.nickname === data.username
+        );
+        if (data.timeTaken !== 0) {
+          userPlayer[0].points += Math.round((200 / data.timeTaken) * 10);
+        }
+        room = await room[0].save();
+        io.to(data.roomName).emit("msg", {
+          username: data.username,
+          msg: "Guessed it!",
+          guessedUserCtr: data.guessedUserCtr + 1,
+        });
+        socket.emit("closeInput", "");
+      } else {
+        io.to(data.roomName).emit("msg", {
+          username: data.username,
+          msg: data.msg,
+          guessedUserCtr: data.guessedUserCtr,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  });
+
+  socket.on("change-turn", async (name) => {
+    try {
+      let room = await Room.findOne({ name });
+      let idx = room.turnIndex;
+      if (idx + 1 === room.players.length) {
+        room.currentRound += 1;
+      }
+      if (room.currentRound <= room.maxRounds) {
+        const word = getWord();
+        room.word = word;
+        room.turnIndex = (idx + 1) % room.players.length;
+        room.turn = room.players[room.turnIndex];
+        room = await room.save();
+        io.to(name).emit("change-turn", room);
+      } else {
+        io.to(name).emit("show-leaderboard", room.players);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  });
+
+  socket.on("updateScore", async (name) => {
+    try {
+      const room = await Room.findOne({ name });
+      io.to(name).emit("updateScore", room);
+    } catch (err) {
+      console.log(err);
+    }
+  });
+
   socket.on("paint", ({ details, roomName, paint }) => {
     io.to(roomName).emit("points", {
       details: details,
@@ -79,12 +139,36 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on('color-change' , ({color , roomName})=>{
-    io.to(roomName).emit('color-change' , color);
+  socket.on("color-change", ({ color, roomName }) => {
+    io.to(roomName).emit("color-change", color);
   });
 
-  socket.on("disconnect", () => {
-    console.log("🔴 Disconnected Socket id : ", socket.id);
+  socket.on("stroke-width", ({ value, roomName }) => {
+    io.to(roomName).emit("stroke-width", value);
+  });
+
+  socket.on("clean-screen", (roomName) => {
+    io.to(roomName).emit("clean-screen", "");
+  });
+
+  socket.on("disconnect", async () => {
+    try {
+      let room = await Room.findOne({ "players.socketID": socket.id });
+      for (let i = 0; i < room.players.length; i++) {
+        if (room.players[i].socketID === socket.id) {
+          room.players.splice(i, 1);
+          break;
+        }
+      }
+      room = await room.save();
+      if (room.players.length === 1) {
+        socket.broadcast.to(room.name).emit("show-leaderboard", room.players);
+      } else {
+        socket.broadcast.to(room.name).emit("user-disconnected", room);
+      }
+    } catch (err) {
+      console.log(err);
+    }
   });
 });
 
