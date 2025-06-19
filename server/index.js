@@ -9,7 +9,13 @@ const connectDB = require("./config/db");
 const getWord = require("./Api/getWord");
 app.use(cors());
 const server = http.createServer(app);
-const io = require("socket.io")(server);
+const io = require("socket.io")(server, {
+  cors: {
+    origin: "*", // For production, allow only your Flutter web/app domain
+    methods: ["GET", "POST"],
+  },
+  transports: ["websocket", "polling"],
+});
 app.use(express.json());
 
 connectDB();
