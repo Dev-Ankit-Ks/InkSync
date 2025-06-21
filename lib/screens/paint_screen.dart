@@ -78,12 +78,16 @@ class _PaintScreenState extends State<PaintScreen> {
     }
   }
 
+  //yaad rakhna sala isi me 4 hrs ka debug lagagaya
+  //for flutter best socket version is -> 1.0.2
+  //for nodejs its -> 2.3.0
+
   void connect() {
     _socket = IO.io(
-      'https://inksync-backend.onrender.com',
+      'http://192.168.1.2:3000',
       IO.OptionBuilder()
-          .setTransports(['websocket', 'polling']) // WebSocket fallback
-          .disableAutoConnect() // manually connect
+          .setTransports(['websocket', 'polling'])
+          .disableAutoConnect()
           .build(),
     );
 
@@ -94,12 +98,12 @@ class _PaintScreenState extends State<PaintScreen> {
     } else {
       _socket.emit("join-game", widget.data);
     }
-    _socket.onConnectError((err) => print("❌ Connect Error: $err"));
-    _socket.onError((err) => print("❌ General Error: $err"));
-    _socket.onDisconnect((_) => print("🔌 Disconnected from server"));
+    _socket.onConnectError((err) => print("Connect Error: $err"));
+    _socket.onError((err) => print("General Error: $err"));
+    _socket.onDisconnect((_) => print("Disconnected from server"));
 
     _socket.onConnect((_) {
-      print("🟢 Connected to socket server!");
+      print("Connected to socket server!");
       _socket.on("updateRoom", (roomData) {
         print(roomData['word']);
         setState(() {
@@ -263,15 +267,15 @@ class _PaintScreenState extends State<PaintScreen> {
     });
 
     _socket.onConnectError((err) {
-      print("❌ Connect Error: $err");
+      print("Connect Error: $err");
     });
 
     _socket.onError((err) {
-      print("❌ General Error: $err");
+      print("General Error: $err");
     });
 
     _socket.onDisconnect((_) {
-      print("🎈 Disconnected from server");
+      print("Disconnected from server");
     });
   }
 
@@ -311,8 +315,6 @@ class _PaintScreenState extends State<PaintScreen> {
                     setState(() {
                       selecedColor = color;
                     });
-
-                    // Convert color to hex string safely
                     String valueString = color.value
                         .toRadixString(16)
                         .padLeft(8, '0');
@@ -351,28 +353,27 @@ class _PaintScreenState extends State<PaintScreen> {
                     ? !isShowFinalLeaderboard
                         ? Stack(
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Container(
-                                  height: height * 0.55,
-                                  width: width,
-                                  child: GestureDetector(
-                                    onPanStart: (details) {
-                                      emitPaint(details.localPosition);
-                                    },
-                                    onPanUpdate: (details) {
-                                      emitPaint(details.localPosition);
-                                    },
-                                    onPanEnd: (details) {
-                                      emitPaint(null);
-                                    },
-                                    child: SizedBox.expand(
+                            SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    height: height * 0.55,
+                                    width: width,
+                                    margin: EdgeInsets.all(8),
+                                    child: GestureDetector(
+                                      onPanStart: (details) {
+                                        emitPaint(details.localPosition);
+                                      },
+                                      onPanUpdate: (details) {
+                                        emitPaint(details.localPosition);
+                                      },
+                                      onPanEnd: (details) {
+                                        emitPaint(null);
+                                      },
                                       child: ClipRRect(
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(20),
-                                        ),
+                                        borderRadius: BorderRadius.circular(20),
                                         child: RepaintBoundary(
                                           child: CustomPaint(
                                             size: Size.infinite,
@@ -384,107 +385,107 @@ class _PaintScreenState extends State<PaintScreen> {
                                       ),
                                     ),
                                   ),
-                                ),
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      onPressed: () {
-                                        selectColor();
-                                      },
-                                      icon: Icon(
-                                        Icons.color_lens,
-                                        color: selecedColor,
-                                      ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8.0,
                                     ),
-                                    Expanded(
-                                      child: Slider(
-                                        min: 1.0,
-                                        max: 10,
-                                        label: "Storewidth : $strokeWidth",
-                                        activeColor: selecedColor,
-                                        value: strokeWidth,
-                                        onChanged: (double value) {
-                                          Map map = {
-                                            'value': value,
-                                            'roomName': dataofRoom['name'],
-                                          };
-                                          _socket.emit('stroke-width', map);
-                                        },
-                                      ),
+                                    child: Row(
+                                      children: [
+                                        IconButton(
+                                          onPressed: selectColor,
+                                          icon: Icon(
+                                            Icons.color_lens,
+                                            color: selecedColor,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Slider(
+                                            min: 1.0,
+                                            max: 10,
+                                            label: "Strokewidth: $strokeWidth",
+                                            activeColor: selecedColor,
+                                            value: strokeWidth,
+                                            onChanged: (double value) {
+                                              Map map = {
+                                                'value': value,
+                                                'roomName': dataofRoom['name'],
+                                              };
+                                              _socket.emit('stroke-width', map);
+                                            },
+                                          ),
+                                        ),
+                                        IconButton(
+                                          onPressed: () {
+                                            _socket.emit(
+                                              'clean-screen',
+                                              dataofRoom['name'],
+                                            );
+                                          },
+                                          icon: Icon(
+                                            Icons.layers_clear,
+                                            color: selecedColor,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    IconButton(
-                                      onPressed: () {
-                                        _socket.emit(
-                                          'clean-screen',
-                                          dataofRoom['name'],
+                                  ),
+                                  SizedBox(height: 8),
+                                  dataofRoom['turn']['nickname'] !=
+                                          widget.data['nickname']
+                                      ? Wrap(
+                                        alignment: WrapAlignment.center,
+                                        spacing: 8,
+                                        children: textBlankWidget,
+                                      )
+                                      : Padding(
+                                        padding: EdgeInsets.all(8),
+                                        child: Text(
+                                          dataofRoom['word'],
+                                          style: TextStyle(fontSize: 30),
+                                        ),
+                                      ),
+                                  Container(
+                                    height: 200,
+                                    child: ListView.builder(
+                                      controller: _scrollController,
+                                      shrinkWrap: true,
+                                      itemCount: messages.length,
+                                      itemBuilder: (context, index) {
+                                        var msg = messages[index].values;
+                                        return ListTile(
+                                          title: Text(
+                                            msg.elementAt(0),
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 19,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          subtitle: Text(
+                                            msg.elementAt(1),
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 16,
+                                            ),
+                                          ),
                                         );
                                       },
-                                      icon: Icon(
-                                        Icons.layers_clear,
-                                        color: selecedColor,
-                                      ),
                                     ),
-                                  ],
-                                ),
-                                dataofRoom['turn']['nickname'] !=
-                                        widget.data['nickname']
-                                    ? Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: textBlankWidget,
-                                    )
-                                    : Container(
-                                      child: Text(
-                                        dataofRoom['word'],
-                                        style: TextStyle(fontSize: 30),
-                                      ),
-                                    ),
-
-                                Container(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.3,
-                                  child: ListView.builder(
-                                    controller: _scrollController,
-                                    shrinkWrap: true,
-                                    itemCount: messages.length,
-                                    itemBuilder: (context, index) {
-                                      var msg = messages[index].values;
-                                      return ListTile(
-                                        title: Text(
-                                          msg.elementAt(0),
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 19,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        subtitle: Text(
-                                          msg.elementAt(1),
-                                          style: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      );
-                                    },
                                   ),
-                                ),
-                              ],
+                                  SizedBox(height: 20),
+                                ],
+                              ),
                             ),
                             dataofRoom['turn']['nickname'] !=
                                     widget.data['nickname']
                                 ? Align(
                                   alignment: Alignment.bottomCenter,
-                                  child: Container(
-                                    margin: EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                    ),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(12),
                                     child: TextField(
                                       readOnly: isTextInputreadOnly,
-                                      autocorrect: false,
                                       controller: controller,
                                       onSubmitted: (value) {
-                                        print(value.trim());
                                         if (value.trim().isNotEmpty) {
                                           Map map = {
                                             'username': widget.data['nickname'],
@@ -499,34 +500,14 @@ class _PaintScreenState extends State<PaintScreen> {
                                           controller.clear();
                                         }
                                       },
-                                      textInputAction: TextInputAction.done,
                                       decoration: InputDecoration(
+                                        hintText: "Your Guess",
+                                        filled: true,
+                                        fillColor: Color(0xffF5F5FA),
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(
                                             8,
                                           ),
-                                          borderSide: BorderSide(
-                                            color: Colors.transparent,
-                                          ),
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                          borderSide: BorderSide(
-                                            color: Colors.transparent,
-                                          ),
-                                        ),
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 14,
-                                        ),
-                                        filled: true,
-                                        fillColor: Color(0xffF5F5FA),
-                                        hintText: "Your Guess",
-                                        hintStyle: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w400,
                                         ),
                                       ),
                                     ),

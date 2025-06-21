@@ -11,7 +11,7 @@ app.use(cors());
 const server = http.createServer(app);
 const io = require("socket.io")(server, {
   cors: {
-    origin: "*", // For production, allow only your Flutter web/app domain
+    origin: "*", 
     methods: ["GET", "POST"],
   },
   transports: ["websocket", "polling"],
@@ -157,26 +157,6 @@ io.on("connection", (socket) => {
     io.to(roomName).emit("clean-screen", "");
   });
 
-  // socket.on("disconnect", async () => {
-  //   try {
-  //     let room = await Room.findOne({ "players.socketID": socket.id });
-  //     for (let i = 0; i < room.players.length; i++) {
-  //       if (room.players[i].socketID === socket.id) {
-  //         room.players.splice(i, 1);
-  //         break;
-  //       }
-  //     }
-  //     room = await room.save();
-  //     if (room.players.length === 1) {
-  //       socket.broadcast.to(room.name).emit("show-leaderboard", room.players);
-  //     } else {
-  //       socket.broadcast.to(room.name).emit("user-disconnected", room);
-  //     }
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // });
-
   socket.on("disconnect", async () => {
     try {
       let room = await Room.findOne({ "players.socketID": socket.id });
@@ -201,5 +181,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(port, "0.0.0.0", () => {
-  console.log(`🚀 Server is up and running on port and fixed one: ${port}`);
+  console.log(`Server is up and running on port and fixed one: ${port}`);
 });
