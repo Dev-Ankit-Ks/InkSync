@@ -11,7 +11,7 @@ app.use(cors());
 const server = http.createServer(app);
 const io = require("socket.io")(server, {
   cors: {
-    origin: "*", 
+    origin: "*",
     methods: ["GET", "POST"],
   },
   transports: ["websocket", "polling"],
@@ -19,6 +19,10 @@ const io = require("socket.io")(server, {
 app.use(express.json());
 
 connectDB();
+
+app.get("/", (req, res) => {
+  res.send("hello from simple server :)");
+});
 
 io.on("connection", (socket) => {
   console.log("Connected...to Socket id : ", socket.id);
